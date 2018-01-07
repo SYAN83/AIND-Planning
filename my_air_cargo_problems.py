@@ -130,9 +130,22 @@ class AirCargoProblem(Problem):
         :return: list of Action objects
         """
         # TODO implement
-
-        # TODO done
         possible_actions = []
+        kb = PropKB()
+        kb.tell(decode_state(state, self.state_map).pos_sentence())
+        for action in self.actions_list:
+            is_possible = True
+            for clause in action.precond_pos:
+                if clause not in kb.clauses:
+                    is_possible = False
+                    break
+            for clause in action.precond_neg:
+                if clause in kb.clauses:
+                    is_possible = False
+                    break
+            if is_possible:
+                possible_actions.append(action)
+        # TODO done
         return possible_actions
 
     def result(self, state: str, action: Action):
@@ -146,6 +159,20 @@ class AirCargoProblem(Problem):
         """
         # TODO implement
         new_state = FluentState([], [])
+        old_state = decode_state(state, self.state_map)
+        for fluent in old_state.pos:
+            if fluent not in action.effect_rem:
+                new_state.pos.append(fluent)
+        for fluent in action.effect_add:
+            if fluent not in new_state.pos:
+                new_state.pos.append(fluent)
+        for fluent in old_state.neg:
+            if fluent not in action.effect_add:
+                new_state.neg.append(fluent)
+        for fluent in action.effect_rem:
+            if fluent not in new_state.neg:
+                new_state.neg.append(fluent)
+        # TODO done
         return encode_state(new_state, self.state_map)
 
     def goal_test(self, state: str) -> bool:
@@ -190,7 +217,34 @@ class AirCargoProblem(Problem):
         return count
 
 
+def get_neg(cargos, planes, airports, pos):
+    """Return all possible states except pos
+
+    :param cargos: list of str
+        cargos in the problem
+    :param planes: list of str
+        planes in the problem
+    :param airports: list of str
+        airports in the problem
+    :return: list of state objects
+    """
+    states = [expr('At({}, {})'.format(c, a)) for c in cargos for a in airports] +\
+        [expr('At({}, {})'.format(p, a)) for p in planes for a in airports] + \
+        [expr('In({}, {})'.format(c, p)) for c in cargos for p in planes]
+    neg = [s for s in states if s not in pos]
+    return neg
+
+
 def air_cargo_p1() -> AirCargoProblem:
+    """Problem 1 initial state and goal:
+    Init(At(C1, SFO) ∧ At(C2, JFK)
+            ∧ At(P1, SFO) ∧ At(P2, JFK)
+            ∧ Cargo(C1) ∧ Cargo(C2)
+            ∧ Plane(P1) ∧ Plane(P2)
+            ∧ Airport(JFK) ∧ Airport(SFO))
+    Goal(At(C1, JFK) ∧ At(C2, SFO))
+
+    """
     cargos = ['C1', 'C2']
     planes = ['P1', 'P2']
     airports = ['JFK', 'SFO']
@@ -199,15 +253,7 @@ def air_cargo_p1() -> AirCargoProblem:
            expr('At(P1, SFO)'),
            expr('At(P2, JFK)'),
            ]
-    neg = [expr('At(C2, SFO)'),
-           expr('In(C2, P1)'),
-           expr('In(C2, P2)'),
-           expr('At(C1, JFK)'),
-           expr('In(C1, P1)'),
-           expr('In(C1, P2)'),
-           expr('At(P1, JFK)'),
-           expr('At(P2, SFO)'),
-           ]
+    neg = get_neg(cargos=cargos, planes=planes, airports=airports, pos=pos)
     init = FluentState(pos, neg)
     goal = [expr('At(C1, JFK)'),
             expr('At(C2, SFO)'),
@@ -216,10 +262,79 @@ def air_cargo_p1() -> AirCargoProblem:
 
 
 def air_cargo_p2() -> AirCargoProblem:
+    """Problem 2 initial state and goal:
+    Init(At(C1, SFO) ∧ At(C2, JFK) ∧ At(C3, ATL)
+            ∧ At(P1, SFO) ∧ At(P2, JFK) ∧ At(P3, ATL)
+            ∧ Cargo(C1) ∧ Cargo(C2) ∧ Cargo(C3)
+            ∧ Plane(P1) ∧ Plane(P2) ∧ Plane(P3)
+            ∧ Airport(JFK) ∧ Airport(SFO) ∧ Airport(ATL))
+    Goal(At(C1, JFK) ∧ At(C2, SFO) ∧ At(C3, SFO))
+
+    """
     # TODO implement Problem 2 definition
-    pass
+    cargos = ['C1', 'C2', 'C3']
+    planes = ['P1', 'P2', 'P3']
+    airports = ['JFK', 'SFO', 'ATL']
+    pos = [expr('At(C1, SFO)'),
+           expr('At(C2, JFK)'),
+           expr('At(C3, ATL)'),
+           expr('At(P1, SFO)'),
+           expr('At(P2, JFK)'),
+           expr('At(P3, ATL)'),
+           ]
+    neg = get_neg(cargos=cargos, planes=planes, airports=airports, pos=pos)
+    init = FluentState(pos, neg)
+    goal = [expr('At(C1, JFK)'),
+            expr('At(C2, SFO)'),
+            expr('At(C3, SFO)'),
+            ]
+    # TODO done
+    return AirCargoProblem(cargos, planes, airports, init, goal)
 
 
 def air_cargo_p3() -> AirCargoProblem:
+    """Problem 3 initial state and goal:
+    Init(At(C1, SFO) ∧ At(C2, JFK) ∧ At(C3, ATL) ∧ At(C4, ORD)
+            ∧ At(P1, SFO) ∧ At(P2, JFK)
+            ∧ Cargo(C1) ∧ Cargo(C2) ∧ Cargo(C3) ∧ Cargo(C4)
+            ∧ Plane(P1) ∧ Plane(P2)
+            ∧ Airport(JFK) ∧ Airport(SFO) ∧ Airport(ATL) ∧ Airport(ORD))
+    Goal(At(C1, JFK) ∧ At(C3, JFK) ∧ At(C2, SFO) ∧ At(C4, SFO))
+
+    """
     # TODO implement Problem 3 definition
-    pass
+    cargos = ['C1', 'C2', 'C3', 'C4']
+    planes = ['P1', 'P2']
+    airports = ['JFK', 'SFO', 'ATL', 'ORD']
+    pos = [expr('At(C1, SFO)'),
+           expr('At(C2, JFK)'),
+           expr('At(C3, ATL)'),
+           expr('At(C4, ORD)'),
+           expr('At(P1, SFO)'),
+           expr('At(P2, JFK)'),
+           ]
+    neg = get_neg(cargos=cargos, planes=planes, airports=airports, pos=pos)
+    init = FluentState(pos, neg)
+    goal = [expr('At(C1, JFK)'),
+            expr('At(C2, SFO)'),
+            expr('At(C3, JFK)'),
+            expr('At(C4, SFO)'),
+            ]
+    # TODO done
+    return AirCargoProblem(cargos, planes, airports, init, goal)
+
+
+if __name__ == '__main__':
+    p = air_cargo_p1()
+    print("**** Have Cake example problem setup ****")
+    print("Initial state for this problem is {}".format(p.initial))
+    print("\nActions for this domain are:")
+    for a in p.actions_list:
+        print('\t{}{}'.format(a.name, a.args))
+    print("\nFluents in this problem are:")
+    for f in p.state_map:
+        print('\t{}'.format(f))
+    print("\nGoal requirement for this problem are:")
+    for g in p.goal:
+        print('\t{}'.format(g))
+    print()

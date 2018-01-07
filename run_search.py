@@ -25,7 +25,8 @@ choices for each include:
 
 PROBLEMS = [["Air Cargo Problem 1", air_cargo_p1],
             ["Air Cargo Problem 2", air_cargo_p2],
-            ["Air Cargo Problem 3", air_cargo_p3]]
+            ["Air Cargo Problem 3", air_cargo_p3],
+            ]
 SEARCHES = [["breadth_first_search", breadth_first_search, ""],
             ['breadth_first_tree_search', breadth_first_tree_search, ""],
             ['depth_first_graph_search', depth_first_graph_search, ""],
