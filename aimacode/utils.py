@@ -504,7 +504,8 @@ def expr_handle_infix_ops(x):
 
 class defaultkeydict(collections.defaultdict):
     """Like defaultdict, but the default_factory is a function of the key.
-    >>> d = defaultkeydict(len); d['four']
+    >>> d = defaultkeydict(len)
+    >>> d['four']
     4
     """
     def __missing__(self, key):

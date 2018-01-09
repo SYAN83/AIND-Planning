@@ -118,7 +118,7 @@ class AirCargoProblem(Problem):
                                          [effect_add, effect_rem])
                             flys.append(fly)
             return flys
-
+        # TODO done
         return load_actions() + unload_actions() + fly_actions()
 
     def actions(self, state: str) -> list:
@@ -213,7 +213,13 @@ class AirCargoProblem(Problem):
         executed.
         """
         # TODO implement (see Russell-Norvig Ed-3 10.2.3  or Russell-Norvig Ed-2 11.2)
+        kb = PropKB()
+        kb.tell(decode_state(node.state, self.state_map).pos_sentence())
         count = 0
+        for clause in self.goal:
+            if clause not in kb.clauses:
+                count += 1
+        # TODO done
         return count
 
 
@@ -325,7 +331,7 @@ def air_cargo_p3() -> AirCargoProblem:
 
 
 if __name__ == '__main__':
-    p = air_cargo_p1()
+    p = air_cargo_p3()
     print("**** Have Cake example problem setup ****")
     print("Initial state for this problem is {}".format(p.initial))
     print("\nActions for this domain are:")
